@@ -1,21 +1,31 @@
 import tkinter
 
 
+def hello():
+    print("Hello")
+
 top = tkinter.Tk()
-top.geometry("500x500")
+top.geometry("300x300")
 top.resizable(height = False, width = False)
+top.title("netscan")
 
-startAddress = tkinter.Entry()
-endAddress = tkinter.Entry()
-startPort = tkinter.Entry()
-endPort = tkinter.Entry()
+startAddress = tkinter.Entry(width = 20)
+endAddress = tkinter.Entry(width = 20)
+startPort = tkinter.Entry(width = 20)
+endPort = tkinter.Entry(width = 20)
 
-scan = tkinter.Button(width = 25)
+addressList = tkinter.Listbox()
+portList = tkinter.Listbox()
 
-startAddress.place(x = 100, y = 60)
-endAddress.place(x = 100, y = 130)
-startPort.place(x = 300, y = 60)
-endPort.place(x = 300, y = 130)
-scan.place(x = 175, y = 200)
+scan = tkinter.Button(command=hello, text="Scan", width = 20)
+
+startAddress.place(relx = .05, rely = .1)
+endAddress.place(relx = .05, rely = .25)
+startPort.place(relx = .55, rely = .1)
+endPort.place(relx = .55, rely = .25)
+scan.place(relx = .25, rely = .35)
+
+addressList.place(relx = .05, rely = .45)
+portList.place(relx = .55, rely = .45)
 
 top.mainloop()
