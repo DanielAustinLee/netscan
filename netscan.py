@@ -12,7 +12,7 @@ def pingScan(ipAddress):
     try:
         subprocess.check_output("ping -c 1 " + ipAddress)
 
-    except Exception, e:
+    except Exception:
         return False
 
     return True
