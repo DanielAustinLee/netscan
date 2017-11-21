@@ -1,23 +1,16 @@
-from netifaces import *
-import socket
-import subprocess
-import os
-import threading
 from scapy.all import *
 
 # parameter ipAddress: IP address to scan
 # returns True if host is up, False if host is down
 def pingScan(ipAddress):
 
-    try:
-        subprocess.check_output("ping -c 1 " + ipAddress)
 
-    except Exception:
-        return False
+    pingr = IP(dst=ipAddress)/ICMP()
+    ans, unans = sr(pingr, timeout=1, verbose = False)
+    print(ans)
 
-    return True
-
-#parameter addressList: list of IP addresses to scan
+#parameter startAddress: IP address to start scanning
+#parameter endAddress: IP address to stop scanning
 def scanAddresses(startAddress, endAddress):
     startAddress = startAddress.split(".")
     endAddress = endAddress.split(".")
@@ -32,14 +25,15 @@ def scanAddresses(startAddress, endAddress):
 
                 for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
 
-                    if pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
-                        activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+                    pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+
+   
 
 def portScan(ipAddress, port):
     pass
 
 def main():
-    print(pingScan("8.8.8.8"))
+
     scanAddresses("8.8.8.8", "8.8.8.255")
 
 main()
