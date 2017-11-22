@@ -1,5 +1,7 @@
 from scapy.all import *
 
+#Suppress scapy output
+conf.verb = 0
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 # parameter ipAddress: IP address to scan
@@ -33,21 +35,31 @@ def scanAddresses(startAddress, endAddress):
 			
 			activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
 
+    for i in activeHosts:
+	print(i + " is up.")
     return activeHosts
 
    
-
-def portScan(ipAddress, port):
-    ans, uans = sr(IP(dst=host)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
-    print(port + " port at host " + ipAddress)
+#parameter ipAddress: IP address of host to be scanned
+#parameter port: Port to be scanned
+def portScan(ipAddress, startPort, endPort):
+    ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=(startPort, endPort),flags="S"),timeout=0.5)
+    
+    if ans:
+	print(str(port) + " port at host " + str(ipAddress) + " is up.")
 
 def main():
     
+    ans, uans = sr(IP(dst="192.168.1.74")/TCP(sport=RandShort(),dport=62078,flags="S"),timeout=0.5)
+    
+    print(ans)
+
     while True:
 	startAddress = raw_input("Starting Address: ")
 	endAddress = raw_input("Ending Address: ")
         hostList = scanAddresses(str(startAddress), str(endAddress))
 	
 	for address in hostList:
-	    portScan(address, 8080)
+	    print(str(address))
+	    portScan(address, 1000, 8000)
 main()
