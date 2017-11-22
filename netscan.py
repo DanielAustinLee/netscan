@@ -11,6 +11,8 @@ def pingScan(ipAddress):
     pingr = IP(dst=ipAddress)/ICMP()
     ans, unans = sr(pingr, timeout=0.5, verbose = 0)
     
+    ans.summary()
+
     return len(ans) == 1
 
 #parameter startAddress: IP address to start scanning
@@ -46,13 +48,13 @@ def portScan(ipAddress, startPort, endPort):
     ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=(startPort, endPort),flags="S"),timeout=0.5)
     
     if ans:
-	print(str(port) + " port at host " + str(ipAddress) + " is up.")
+	ans.summary()
 
 def main():
     
-    ans, uans = sr(IP(dst="192.168.1.74")/TCP(sport=RandShort(),dport=62078,flags="S"),timeout=0.5)
     
-    print(ans)
+    
+    
 
     while True:
 	startAddress = raw_input("Starting Address: ")
@@ -61,5 +63,5 @@ def main():
 	
 	for address in hostList:
 	    print(str(address))
-	    portScan(address, 1000, 8000)
+	    portScan(address, 1, 200)
 main()
