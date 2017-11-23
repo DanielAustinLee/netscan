@@ -72,6 +72,9 @@ def makeReport(portDictionary):
     return report
 
 
+#os fingerprint stub
+def detectOS():
+    pass
 
 
 def main():
