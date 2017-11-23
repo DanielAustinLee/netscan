@@ -11,13 +11,12 @@ def pingScan(ipAddress):
     pingr = IP(dst=ipAddress)/ICMP()
     ans, unans = sr(pingr, timeout=0.5, verbose = 0)
     
-    ans.summary()
 
     return len(ans) == 1
 
 #parameter startAddress: IP address to start scanning
 #parameter endAddress: IP address to stop scanning
-
+#returns a list of active hosts
 def scanAddresses(startAddress, endAddress):
     startAddress = startAddress.split(".")
     endAddress = endAddress.split(".")
@@ -39,29 +38,64 @@ def scanAddresses(startAddress, endAddress):
 
     for i in activeHosts:
 	print(i + " is up.")
+
     return activeHosts
 
    
 #parameter ipAddress: IP address of host to be scanned
 #parameter port: Port to be scanned
 def portScan(ipAddress, startPort, endPort):
-    ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=(startPort, endPort),flags="S"),timeout=0.5)
+    openPorts = []
     
-    if ans:
-	ans.summary()
+    for port in range(startPort, endPort + 1):
+        ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
+    
+        if len(ans) > 0:
+            openPorts.append(port)
+
+    return openPorts
+
+#Parameter portDictionary: Dictionary where keys are ip addresses and values are lists containing open ports for that key
+#Returns a string containing a report of the portDictionary
+def makeReport(portDictionary):
+
+    report = ""
+    
+    for address in portDictionary.keys():
+
+	report = report + "\nOpen ports on " + str(address)
+
+	for port in portDictionary[address]:
+
+	    report = report + "\n" + str(port)
+
+    return report
+
+
+
 
 def main():
     
+    addressDict = {}
     
-    
-    
+    try:
 
-    while True:
-	startAddress = raw_input("Starting Address: ")
-	endAddress = raw_input("Ending Address: ")
-        hostList = scanAddresses(str(startAddress), str(endAddress))
+        while True:
+            startAddress = raw_input("Starting Address: ")
+	    endAddress = raw_input("Ending Address: ")
+            hostList = scanAddresses(str(startAddress), str(endAddress))
 	
-	for address in hostList:
-	    print(str(address))
-	    portScan(address, 1, 200)
+	    for x in hostList:
+	        addressDict[x] = []
+
+
+	    for address in addressDict.keys(): 
+	        addressDict[address] = portScan(address, 1, 200)
+
+	    print(makeReport(addressDict))
+
+    except KeyboardInterrupt:
+	print("\n\nGoodbye\n\n")
+
 main()
+
