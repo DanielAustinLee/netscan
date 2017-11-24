@@ -81,9 +81,10 @@ def makeReport(portDictionary):
     #For every entry in dict, list IP address and enumerate open ports
     for address in portDictionary.keys():
 
+	report = report + "\nOperating System: " + str(portDictionary[address][0])
 	report = report + "\nOpen ports on " + str(address)
 
-	for port in portDictionary[address]:
+	for port in portDictionary[address][1:]:
 
 	    report = report + "\n" + str(port)
 
@@ -101,10 +102,10 @@ def detectOS(ipAddress):
 	#Linux will make IP packets with ttl = 64
 	#Windows will make IP packets with ttl = 128
 	if pkt.getlayer(IP).ttl <= 64:
-	    print("Linux")
+	    return "Linux"
 
 	else:
-	    print("Windows")
+	    return "Windows"
 
 
 def main():
@@ -124,8 +125,8 @@ def main():
 
 
 	    for address in addressDict.keys():
-		detectOS(address)
-	        addressDict[address] = portScan(address, 1, 200)
+		addressDict[address].append(detectOS(address))
+	        addressDict[address] = addressDict[address] + portScan(address, 1, 200)
 
 	    print(makeReport(addressDict))
 
