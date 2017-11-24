@@ -1,4 +1,6 @@
 from scapy.all import *
+import socket
+import sys
 
 #Suppress scapy output
 conf.verb = 0
@@ -81,8 +83,15 @@ def makeReport(portDictionary):
     #For every entry in dict, list IP address and enumerate open ports
     for address in portDictionary.keys():
 
+        report = report + "\nOpen ports on " + str(address) 
+
+	try:
+	    report = report + " (" + socket.gethostbyaddr(address)[0] + ")"
+
+	except socket.herror:
+	    report = report + " (unknown host name)"
+
 	report = report + "\nOperating System: " + str(portDictionary[address][0])
-	report = report + "\nOpen ports on " + str(address)
 
 	for port in portDictionary[address][1:]:
 
@@ -108,15 +117,31 @@ def detectOS(ipAddress):
 	    return "Windows"
 
 
+
 def main():
     
     addressDict = {}
-    
+    startAddress = ""
+    endAddress = ""
+
+
+    if "-p" in sys.argv:
+	range = sys.argv[ 1 + sys.argv.index("-p") ]
+
+	if "-" in range:
+	    startAddress = range.split("-")[0]
+	    endAddress = range.split("-")[1]
+
+    else:
+	startAddress = "192.168.1.0"
+	endAddress = "192.168.1.255"
+
+
     try:
 
         while True:
-            startAddress = raw_input("Starting Address: ")
-	    endAddress = raw_input("Ending Address: ")
+            #startAddress = raw_input("Starting Address: ")
+	    #endAddress = raw_input("Ending Address: ")
             hostList = scanAddresses(str(startAddress), str(endAddress))
 	
 	    for x in hostList:
