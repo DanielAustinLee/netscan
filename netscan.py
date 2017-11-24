@@ -53,18 +53,19 @@ def scanAddresses(startAddress, endAddress):
 
    
 #parameter ipAddress: IP address of host to be scanned
-#parameter port: Port to be scanned
+#parameter startPort: Start of port range to be scanned
+#parameter endPort: End of port range to be scanned
 def portScan(ipAddress, startPort, endPort):
     openPorts = []
 
     try:
-
+	#For every port in range send TCP SYN packet and get response
         for port in range(startPort, endPort + 1):
             ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
 
+	    #If there is a response, log port as open
             if len(ans) > 0:
                 openPorts.append(port)
-	        detectOS()
 
     except KeyboardInterrupt:
 	raise KeyboardInterrupt()
@@ -76,7 +77,8 @@ def portScan(ipAddress, startPort, endPort):
 def makeReport(portDictionary):
 
     report = ""
-    
+
+    #For every entry in dict, list IP address and enumerate open ports
     for address in portDictionary.keys():
 
 	report = report + "\nOpen ports on " + str(address)
@@ -88,9 +90,21 @@ def makeReport(portDictionary):
     return report
 
 
-#os fingerprint stub
-def detectOS():
-    pass
+#Parameter ipAddress: The IP address of the host to fingerprint, in string form
+def detectOS(ipAddress):
+
+    #Create and send ICMP packet and get response
+    pkt = sr1(IP(dst=ipAddress)/ICMP(), timeout = 1)
+
+    if IP in pkt:
+
+	#Linux will make IP packets with ttl = 64
+	#Windows will make IP packets with ttl = 128
+	if pkt.getlayer(IP).ttl <= 64:
+	    print("Linux")
+
+	else:
+	    print("Windows")
 
 
 def main():
@@ -109,7 +123,8 @@ def main():
 	        addressDict[x] = []
 
 
-	    for address in addressDict.keys(): 
+	    for address in addressDict.keys():
+		detectOS(address)
 	        addressDict[address] = portScan(address, 1, 200)
 
 	    print(makeReport(addressDict))
