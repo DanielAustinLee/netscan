@@ -4,13 +4,20 @@ from scapy.all import *
 conf.verb = 0
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
+
+load_module("p0f")
+
+
 # parameter ipAddress: IP address to scan
 # returns True if host is up, False if host is down
 def pingScan(ipAddress):
 
-    pingr = IP(dst=ipAddress)/ICMP()
-    ans, unans = sr(pingr, timeout=0.5, verbose = 0)
-    
+    try:
+        pingr = IP(dst=ipAddress)/ICMP()
+        ans, _ = sr(pingr, timeout=0.5, verbose = 0)
+
+    except KeyboardInterrupt:
+	raise KeyboardInterrupt()
 
     return len(ans) == 1
 
@@ -23,21 +30,24 @@ def scanAddresses(startAddress, endAddress):
 
     activeHosts = []
 
-    for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
+    try:
 
-        for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
+        for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
 
-            for thirdField in range(int(startAddress[2]), int(endAddress[2]) + 1):
+            for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
 
-                for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
+                for thirdField in range(int(startAddress[2]), int(endAddress[2]) + 1):
 
-                    if pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
-			
-			
-			activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+                    for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
 
-    for i in activeHosts:
-	print(i + " is up.")
+                        if pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
+
+
+        			activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+
+
+    except KeyboardInterrupt:
+	raise KeyboardInterrupt()
 
     return activeHosts
 
@@ -46,12 +56,18 @@ def scanAddresses(startAddress, endAddress):
 #parameter port: Port to be scanned
 def portScan(ipAddress, startPort, endPort):
     openPorts = []
-    
-    for port in range(startPort, endPort + 1):
-        ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
-    
-        if len(ans) > 0:
-            openPorts.append(port)
+
+    try:
+
+        for port in range(startPort, endPort + 1):
+            ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
+
+            if len(ans) > 0:
+                openPorts.append(port)
+	        detectOS()
+
+    except KeyboardInterrupt:
+	raise KeyboardInterrupt()
 
     return openPorts
 
@@ -89,6 +105,7 @@ def main():
             hostList = scanAddresses(str(startAddress), str(endAddress))
 	
 	    for x in hostList:
+		
 	        addressDict[x] = []
 
 
@@ -99,6 +116,10 @@ def main():
 
     except KeyboardInterrupt:
 	print("\n\nGoodbye\n\n")
+
+    except ValueError:
+	print("Invalid Address")
+	main()
 
 main()
 
