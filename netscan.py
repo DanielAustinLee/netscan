@@ -128,9 +128,10 @@ def getSubnetHosts():
 	if iface == interface:
 	    print(bin(net))
 
-def detectCamera():
-
-    syn = IP(dst = ) / TCP(dport = 80, flags = 'S')
+def detectCamera(ip):
+    payload = "GET / HTTP/1.1\r\nHost: " + ip + "\r\n"
+    packet = IP(dst = ip)/TCP()/request
+    
 
 def main():
     
