@@ -111,7 +111,7 @@ def detectOS(ipAddress):
 	#Linux will make IP packets with ttl = 64
 	#Windows will make IP packets with ttl = 128
 	if pkt.getlayer(IP).ttl <= 64:
-	    return "Linux"
+	    return "Linux/Unix"
 
 	else:
 	    return "Windows"
@@ -153,7 +153,7 @@ def main():
 #    for el in broadcastAddress:
 #	print(bin(int(el)))
 #
-#    getSubnetHosts()
+
 
 
 
@@ -165,9 +165,7 @@ def main():
     else:
 	print("No address range specified")
 	return
-	#getSubnetHosts()
-	#startAddress = "192.168.1.0"
-	#endAddress = "192.168.1.255"
+
 
     if "-p" in sys.argv:
 	range = sys.argv[ 1 + sys.argv.index("-p") ]
