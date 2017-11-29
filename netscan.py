@@ -156,12 +156,12 @@ def main():
 
 
 
-
+    #inputs the range specified by the user
     if "-r" in sys.argv:
 	range = sys.argv[ 1 + sys.argv.index("-r") ]
 	startAddress = range.split("-")[0]
 	endAddress = range.split("-")[1]
-
+    #sets range default	
     else:
 	print("No address range specified")
 	return
