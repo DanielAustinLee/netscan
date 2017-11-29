@@ -134,6 +134,10 @@ def getSubnetHosts():
 		#if (x == "0"):
 		print(x)
 
+def detectCamera(ip):
+    payload = "GET / HTTP/1.1\r\nHost: " + ip + "\r\n"
+    packet = IP(dst = ip)/TCP()/request
+    
 
 def main():
     
