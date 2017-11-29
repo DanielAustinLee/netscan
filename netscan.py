@@ -8,9 +8,6 @@ conf.verb = 0
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
-load_module("p0f")
-
-
 # parameter ipAddress: IP address to scan
 # returns True if host is up, False if host is down
 def pingScan(ipAddress):
@@ -58,13 +55,13 @@ def scanAddresses(startAddress, endAddress):
 #parameter ipAddress: IP address of host to be scanned
 #parameter startPort: Start of port range to be scanned
 #parameter endPort: End of port range to be scanned
-def portScan(ipAddress, startPort, endPort, portList = None):
+def portScan(ipAddress, portList = None):
     openPorts = []
 
 
     try:
 	#For every port in range send TCP SYN packet and get response
-        for port in range(startPort, endPort + 1):
+        for port in portList:
             ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
 
 	    #If there is a response, log port as open
@@ -124,9 +121,18 @@ def getSubnetHosts():
 
     interface = conf.iface
 
+    print(conf.route.routes)
+
     for net, mask, gw, iface, addr in conf.route.routes:
-	if iface == interface:
-	    print(bin(net))
+	if iface == interface and net != 0 and mask != 0 and gw != "0.0.0.0":
+	    #now find broadcast address and convert net and bcast into a string
+	    print("Network: " + bin(net))
+	    print("MASK: " + bin(mask))
+	    print("Gateway: " + gw)
+
+	    for i, x in enumerate(bin(mask)):
+		#if (x == "0"):
+		print(x)
 
 
 def main():
@@ -134,9 +140,8 @@ def main():
     addressDict = {}
     startAddress = None
     endAddress = None
-    portList = [1,2,3,4,5,22,80]
-    startPort = None
-    endPort = None
+    portList = []
+    
 #    interface = conf.iface
 #
 #    netAddress = None
@@ -144,7 +149,7 @@ def main():
 #    for el in broadcastAddress:
 #	print(bin(int(el)))
 #
-    getSubnetHosts()
+#    getSubnetHosts()
 
 
 
@@ -154,14 +159,30 @@ def main():
 	endAddress = range.split("-")[1]
 
     else:
-	startAddress = "192.168.1.0"
-	endAddress = "192.168.1.255"
+	print("No address range specified")
+	return
+	#getSubnetHosts()
+	#startAddress = "192.168.1.0"
+	#endAddress = "192.168.1.255"
 
+    if "-p" in sys.argv:
+	range = sys.argv[ 1 + sys.argv.index("-p") ]
+	startPort = range.split("-")[0]
+	endPort = range.split("-")[1]
+
+	for port in range(startPort, endPort + 1):
+	    portList.append(port)
+
+    else:
+	portFile = open("Common ports", "r")
+	for line in portFile.readlines():
+	    if line != "\n":
+	        portList.append(int(line))
 
 
 
     try:
-
+	print("Starting scan")
         hostList = scanAddresses(str(startAddress), str(endAddress))
 
         for x in hostList:
@@ -171,7 +192,7 @@ def main():
 
         for address in addressDict.keys():
             addressDict[address].append(detectOS(address))
-	    addressDict[address] = addressDict[address] + portScan(address, 1, 200)
+	    addressDict[address] = addressDict[address] + portScan(address, portList)
 
 	print(makeReport(addressDict))
 
