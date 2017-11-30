@@ -106,41 +106,38 @@ def detectOS(ipAddress):
     #Create and send ICMP packet and get response
     pkt = sr1(IP(dst=ipAddress)/ICMP(), timeout = 1)
 
-    if IP in pkt:
+    if not pkt is None:
+        if IP in pkt:
 
-	#Linux will make IP packets with ttl = 64
-	#Windows will make IP packets with ttl = 128
-	if pkt.getlayer(IP).ttl <= 64:
-	    return "Linux/Unix"
+	    #Linux will make IP packets with ttl = 64
+	    #Windows will make IP packets with ttl = 128
+	    if pkt.getlayer(IP).ttl <= 64:
+	        return "Linux/Unix"
 
-	else:
-	    return "Windows"
+	    else:
+	        return "Windows"
 
 #method stub
 def getSubnetHosts():
 
     interface = conf.iface
 
-    print(conf.route.routes)
+#    print(conf.route.routes)
 
     for net, mask, gw, iface, addr in conf.route.routes:
 	if iface == interface and net != 0 and mask != 0 and gw != "0.0.0.0":
 	    #now find broadcast address and convert net and bcast into a string
-	    print("Network: " + bin(net))
-	    print("MASK: " + bin(mask))
+#	    print("Network: " + bin(net))
+#	    print("MASK: " + bin(mask))
 	    print("Gateway: " + gw)
+#	    print(addr)
+#	    for i, x in enumerate(bin(mask)):
+#		#if (x == "0"):
+#		print(x)
 
-	    for i, x in enumerate(bin(mask)):
-		#if (x == "0"):
-		print(x)
-
-def detectCamera(ip):
-    payload = "GET / HTTP/1.1\r\nHost: " + ip + "\r\n"
-    packet = IP(dst = ip)/TCP()/request
-    
 
 def main():
-    
+    getSubnetHosts()    
     addressDict = {}
     startAddress = None
     endAddress = None
@@ -156,12 +153,12 @@ def main():
 
 
 
-    #inputs the range specified by the user
+
     if "-r" in sys.argv:
 	range = sys.argv[ 1 + sys.argv.index("-r") ]
 	startAddress = range.split("-")[0]
 	endAddress = range.split("-")[1]
-    #sets range default	
+
     else:
 	print("No address range specified")
 	return
