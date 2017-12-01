@@ -9,7 +9,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 # parameter ipAddress: IP address to scan
-# returns True if host is up, False if host is down
+#returns True if host is identified as up, False if host is identified as down
 def pingScan(ipAddress):
 
     try:
@@ -17,44 +17,72 @@ def pingScan(ipAddress):
         ans, _ = sr(pingr, timeout=0.5, verbose = 0)
 
     except KeyboardInterrupt:
+        raise KeyboardInterrupt()
+
+    return len(ans) > 0
+
+
+#parameter ipAddress: IP address to scan
+#returns True if host is identified as up, False if host is identified as down
+def tcpScan(ipAddress):
+
+    try:
+	tcpr = IP(dst=ipAddress)/TCP(dport=443, sport=RandShort(), flags="S")
+	ans, _ = sr(tcpr, timeout=0.5, verbose = 0)
+	ans[0][1].sprintf("%TCP.flags%")
+
+    except KeyboardInterrupt:
 	raise KeyboardInterrupt()
 
-    return len(ans) == 1
+    return len(ans) > 0
 
 #parameter startAddress: IP address to start scanning
 #parameter endAddress: IP address to stop scanning
+#parameter tcpScan: Flag for ping vs tcp scan
 #returns a list of active hosts
-def scanAddresses(startAddress, endAddress):
+def scanAddresses(startAddress, endAddress, tcpScan):
     startAddress = startAddress.split(".")
     endAddress = endAddress.split(".")
 
     activeHosts = []
 
     try:
+	#If tcpScan == False, use pingScan, else use tcpScan
+	if not tcpScan:
+            for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
 
-        for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
+                for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
 
-            for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
+                    for thirdField in range(int(startAddress[2]), int(endAddress[2]) + 1):
 
-                for thirdField in range(int(startAddress[2]), int(endAddress[2]) + 1):
+                        for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
 
-                    for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
+                            if pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
 
-                        if pingScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
+        		        activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+	else:
 
+            for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
 
-        			activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
+                for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
 
+                    for thirdField in range(int(startAddress[2]), int(endAddress[2]) + 1):
+
+                        for fourthField in range(int(startAddress[3]), int(endAddress[3]) + 1):
+
+                            if tcpScan(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField)):
+
+        		        activeHosts.append(str(firstField) + "." + str(secondField) + "." + str(thirdField) + "." + str(fourthField))
 
     except KeyboardInterrupt:
 	raise KeyboardInterrupt()
 
     return activeHosts
 
-   
+
 #parameter ipAddress: IP address of host to be scanned
-#parameter startPort: Start of port range to be scanned
-#parameter endPort: End of port range to be scanned
+#parameter portList: List of ports to be scanned
+#Returns a list of ports determined to be open
 def portScan(ipAddress, portList = None):
     openPorts = []
 
@@ -117,43 +145,21 @@ def detectOS(ipAddress):
 	    else:
 	        return "Windows"
 
-#method stub
-def getSubnetHosts():
-
-    interface = conf.iface
-
-#    print(conf.route.routes)
-
-    for net, mask, gw, iface, addr in conf.route.routes:
-	if iface == interface and net != 0 and mask != 0 and gw != "0.0.0.0":
-	    #now find broadcast address and convert net and bcast into a string
-#	    print("Network: " + bin(net))
-#	    print("MASK: " + bin(mask))
-	    print("Gateway: " + gw)
-#	    print(addr)
-#	    for i, x in enumerate(bin(mask)):
-#		#if (x == "0"):
-#		print(x)
-
 
 def main():
-    getSubnetHosts()    
+
+    #Initialize variables
+    tcpScan = False
     addressDict = {}
     startAddress = None
     endAddress = None
     portList = []
-    
-#    interface = conf.iface
-#
-#    netAddress = None
-#    broadcastAddress = conf.route.get_if_bcast(interface).split(".")
-#    for el in broadcastAddress:
-#	print(bin(int(el)))
-#
 
+    #if -t flag is present, use tcpScan
+    if "-t" in sys.argv:
+	tcpScan = True
 
-
-
+    #get ip range
     if "-r" in sys.argv:
 	range = sys.argv[ 1 + sys.argv.index("-r") ]
 	startAddress = range.split("-")[0]
@@ -163,7 +169,7 @@ def main():
 	print("No address range specified")
 	return
 
-
+    #get port range
     if "-p" in sys.argv:
 	range = sys.argv[ 1 + sys.argv.index("-p") ]
 	startPort = range.split("-")[0]
@@ -172,6 +178,7 @@ def main():
 	for port in range(startPort, endPort + 1):
 	    portList.append(port)
 
+    #if not port range specified, use list of common ports
     else:
 	portFile = open("Common ports", "r")
 	for line in portFile.readlines():
@@ -182,13 +189,15 @@ def main():
 
     try:
 	print("Starting scan")
-        hostList = scanAddresses(str(startAddress), str(endAddress))
+	#hostList is a list of active hosts
+        hostList = scanAddresses(str(startAddress), str(endAddress), tcpScan)
 
+	#Adding ip addresses as keys in addressDict
         for x in hostList:
 
             addressDict[x] = []
 
-
+	#for every key in the dictionary, os is fingerprinted and open ports added
         for address in addressDict.keys():
             addressDict[address].append(detectOS(address))
 	    addressDict[address] = addressDict[address] + portScan(address, portList)
