@@ -26,22 +26,22 @@ def pingScan(ipAddress):
 #returns True if host is identified as up, False if host is identified as down
 def tcpScan(ipAddress):
 
-    #this should be checking for an ACK instead of just checking for a reply
     try:
-	tcpr = IP(dst=ipAddress)/TCP(dport=443, sport=RandShort(), flags="S")
-	ans, _ = sr(tcpr, timeout=0.5, verbose = 0)
-	ans[0][1].sprintf("%TCP.flags%")
+	tcpSYN = IP(dst=ipAddress)/TCP(dport=443, sport=RandShort(), flags="S")
+	tcpACK = IP(dst=ipAddress)/TCP(dport=80, sport=RandShort(), flags="A")
+	ans1, _ = sr(tcpSYN, timeout=0.5, verbose = 0)
+	ans2, _ = sr(tcpACK, timeout=0.5, verbose = 0)
 
     except KeyboardInterrupt:
 	raise KeyboardInterrupt()
 
-    return len(ans) > 0
+    return len(ans1) > 0 or len(ans2) > 0
 
 #parameter startAddress: IP address to start scanning
 #parameter endAddress: IP address to stop scanning
 #parameter tcpScan: Flag for ping vs tcp scan
 #returns a list of active hosts
-def scanAddresses(startAddress, endAddress, tcpScan):
+def scanAddresses(startAddress, endAddress, tcp):
     startAddress = startAddress.split(".")
     endAddress = endAddress.split(".")
 
@@ -49,7 +49,7 @@ def scanAddresses(startAddress, endAddress, tcpScan):
 
     try:
 	#If tcpScan == False, use pingScan, else use tcpScan
-	if not tcpScan:
+	if not tcp:
             for firstField in range(int(startAddress[0]), int(endAddress[0]) + 1):
 
                 for secondField in range(int(startAddress[1]), int(endAddress[1]) + 1):
@@ -94,7 +94,6 @@ def portScan(ipAddress, portList = None):
             ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
 
 	    #If there is a response, log port as open
-	    #Again, this should be if an ACK is received, rather than simply looking for a response
             if len(ans) > 0:
                 openPorts.append(port)
 
