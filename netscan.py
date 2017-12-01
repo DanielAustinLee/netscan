@@ -26,6 +26,7 @@ def pingScan(ipAddress):
 #returns True if host is identified as up, False if host is identified as down
 def tcpScan(ipAddress):
 
+    #this should be checking for an ACK instead of just checking for a reply
     try:
 	tcpr = IP(dst=ipAddress)/TCP(dport=443, sport=RandShort(), flags="S")
 	ans, _ = sr(tcpr, timeout=0.5, verbose = 0)
@@ -93,6 +94,7 @@ def portScan(ipAddress, portList = None):
             ans, uans = sr(IP(dst=ipAddress)/TCP(sport=RandShort(),dport=port,flags="S"),timeout=0.5)
 
 	    #If there is a response, log port as open
+	    #Again, this should be if an ACK is received, rather than simply looking for a response
             if len(ans) > 0:
                 openPorts.append(port)
 
@@ -180,10 +182,16 @@ def main():
 
     #if not port range specified, use list of common ports
     else:
-	portFile = open("Common ports", "r")
-	for line in portFile.readlines():
-	    if line != "\n":
-	        portList.append(int(line))
+
+	try:
+	    portFile = open("Common ports", "r")
+	    for line in portFile.readlines():
+	        if line != "\n":
+	            portList.append(int(line))
+
+	except Exception:
+	    print("Common ports file not found")
+	    return
 
 
 
